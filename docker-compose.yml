@@ -1,0 +1,66 @@
+version: "2.2"
+services:
+  my_database:
+    image: mariadb:10.6
+    restart: always
+    container_name: my_database
+    volumes:
+      - "database_data2:/var/lib/mysql"
+    networks:
+     - application2
+    environment:
+     - MYSQL_ROOT_PASSWORD=ccmpass
+     - MYSQL_DATABASE=ccmbase
+     - MYSQL_USER=ccmuser
+     - MYSQL_PASSWORD=exo
+
+
+  my_webservice:
+    build: .
+    container_name: my_webservice
+    depends_on:
+     - my_database
+    environment:
+     - HOST=my_database
+     - DATABASE=ccmbase
+     - USER=ccmuser
+     - PASSWORD=exo
+    networks:
+     - application2
+    ports:
+      - "9013:9013"
+    volumes:
+      - webservice_data2:/appli
+
+  my_apache:
+    build: ./apache_def/
+    container_name: my_apache
+    volumes:
+      - "webservice_data2:/var/www/html/"
+    depends_on:
+     - my_database
+     - my_php
+     - my_webservice
+    ports:
+     - 8080:80
+    networks:
+      - application2
+
+  my_php:
+    image: php:7.1.11-fpm-alpine
+    container_name: my_php
+    depends_on:
+      - my_database
+    expose:
+      - 9000
+    volumes:
+      - "webservice_data2:/capou" 
+    networks:
+      - application2
+
+volumes:
+  webservice_data2:
+  database_data2:
+networks:
+ application2:
+     
